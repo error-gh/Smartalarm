@@ -9,10 +9,10 @@ st.title("🚨 Smart Math & Task Alarm")
 st.write("Aplikasi alarm anti-tidur dengan tantangan Matematika & TypeRacer!")
 
 # Inisialisasi State
-if "alarm_armed" not in st.session_state:
-    st.session_state.alarm_armed = False
-if "mission_active" not in st.session_state:
-    st.session_state.mission_active = False
+if "state" not in st.session_state:
+    st.session_state.state = "IDLE"  # Pilihannya: IDLE, WAITING, ALARMING
+if "target_alarm_seconds" not in st.session_state:
+    st.session_state.target_alarm_seconds = 0
 if "stage" not in st.session_state:
     st.session_state.stage = 0
 if "target_stages" not in st.session_state:
@@ -54,51 +54,51 @@ sentences = [
     "Aplikasi hebat dibuat dari baris-baris kode yang ditulis dengan teliti"
 ]
 
-# --- 1. TAMPILAN PENGATURAN JAM ALARM ---
-st.subheader("⏰ Pengaturan Alarm (WIB / UTC+7)")
-alarm_time = st.time_input("Pilih Waktu Alarm Berbunyi", datetime.time(6, 0))
+# Ambil waktu WIB saat ini (UTC + 7 jam)
+utc_now = datetime.datetime.now(datetime.timezone.utc)
+wib_now = utc_now + datetime.timedelta(hours=7)
+current_time_obj = wib_now.time()
+current_seconds = current_time_obj.hour * 3600 + current_time_obj.minute * 60 + current_time_obj.second
 
-# Tombol untuk menyalakan mode siaga alarm
-if not st.session_state.alarm_armed and not st.session_state.mission_active:
-    if st.button("Aktifkan Alarm", type="primary"):
-        st.session_state.alarm_armed = True
-        st.success(f"Alarm berhasil disetel untuk jam {alarm_time.strftime('%H:%M')} WIB. Jangan tutup halaman ini!")
+# --- KONDISI 1: IDLE (PILIH WAKTU & SETEL ALARM) ---
+if st.session_state.state == "IDLE":
+    st.subheader("⏰ Pengaturan Alarm (WIB / UTC+7)")
+    st.write(f"Waktu server WIB saat ini: **{current_time_obj.strftime('%H:%M:%S')}**")
+    
+    with st.form("alarm_form"):
+        alarm_time = st.time_input("Pilih Waktu Alarm Berbunyi", datetime.time(current_time_obj.hour, current_time_obj.minute + 1))
+        submitted = st.form_submit_button("Aktifkan Alarm", type="primary")
+        
+        if submitted:
+            alarm_seconds = alarm_time.hour * 3600 + alarm_time.minute * 60
+            st.session_state.target_alarm_seconds = alarm_seconds
+            st.session_state.state = "WAITING"
+            st.rerun()
+
+# --- KONDISI 2: WAITING (MENUNGGU WAKTU ALARM TIBA) ---
+elif st.session_state.state == "WAITING":
+    target_sec = st.session_state.target_alarm_seconds
+    target_hr = target_sec // 3600
+    target_min = (target_sec % 3600) // 60
+    
+    st.info(f"⏳ Alarm aktif disetel pada jam **{target_hr:02d}:{target_min:02d} WIB**. Jangan tutup halaman ini!")
+    st.write(f"Jam WIB server saat ini: `{current_time_obj.strftime('%H:%M:%S')}`")
+    
+    if st.button("❌ Batalkan / Reset Alarm"):
+        st.session_state.state = "IDLE"
         st.rerun()
-
-# --- 2. LOGIKA MENUNGGU WAKTU ALARM ---
-elif st.session_state.alarm_armed and not st.session_state.mission_active:
-    # Ambil waktu WIB saat ini (UTC + 7 jam)
-    utc_now = datetime.datetime.now(datetime.timezone.utc)
-    wib_now = utc_now + datetime.timedelta(hours=7)
-    current_time_obj = wib_now.time()
-    
-    st.info(f"⏳ Alarm aktif. Menunggu waktu mencapai **{alarm_time.strftime('%H:%M')} WIB**...")
-    st.write(f"Jam WIB di server saat ini: `{current_time_obj.strftime('%H:%M:%S')}`")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 Cek Waktu Sekarang"):
-            st.rerun()
-    with col2:
-        if st.button("❌ Batalkan Alarm"):
-            st.session_state.alarm_armed = False
-            st.rerun()
-            
-    # Konversi ke total detik dari jam 00:00 untuk perbandingan yang akurat
-    current_seconds = current_time_obj.hour * 3600 + current_time_obj.minute * 60 + current_time_obj.second
-    alarm_seconds = alarm_time.hour * 3600 + alarm_time.minute * 60
-    
-    if current_seconds >= alarm_seconds:
-        st.session_state.alarm_armed = False
-        st.session_state.mission_active = True
+        
+    # Cek apakah waktu sekarang sudah mencapai atau melewati target
+    if current_seconds >= target_sec:
+        st.session_state.state = "ALARMING"
         st.rerun()
     else:
-        # Auto-refresh halaman setiap 5 detik
+        # Refresh otomatis halaman setiap 5 detik untuk memantau waktu
         time.sleep(5)
         st.rerun()
 
-# --- 3. KONDISI SAAT WAKTU TIBA (ALARM BERBUNYI & MISI DIMULAI) ---
-else:
+# --- KONDISI 3: ALARMING (ALARM BERBUNYI & TANTANGAN DIMULAI) ---
+elif st.session_state.state == "ALARMING":
     st.error("🚨 WAKTU TIBA! ALARM BERBUNYI! Selesaikan tantangan untuk mematikan alarm!")
     
     st.markdown("""
@@ -131,7 +131,8 @@ else:
                     st.session_state.stage += 1
                     st.session_state.current_challenge = None
                     if st.session_state.stage >= st.session_state.target_stages:
-                        st.session_state.mission_active = False
+                        st.session_state.state = "IDLE"
+                        st.session_state.stage = 0
                         st.balloons()
                     st.rerun()
                 else:
@@ -153,7 +154,8 @@ else:
                 st.session_state.stage += 1
                 st.session_state.current_challenge = None
                 if st.session_state.stage >= st.session_state.target_stages:
-                    st.session_state.mission_active = False
+                    st.session_state.state = "IDLE"
+                    st.session_state.stage = 0
                     st.balloons()
                     st.rerun()
                 else:
