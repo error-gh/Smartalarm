@@ -5,7 +5,7 @@ import random
 
 st.set_page_config(page_title="Smart Math & Task Alarm", page_icon="🚨", layout="centered")
 
-st.title("🚨 Smart Math & Task Alarm")
+st.title("BrainAwake Alarm")
 st.write("Aplikasi alarm anti-tidur dengan tantangan Matematika & TypeRacer!")
 
 # Inisialisasi State
@@ -103,7 +103,7 @@ elif st.session_state.state == "ALARMING":
     
     st.markdown("""
         <audio autoplay loop>
-          <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+          <source src="sound alarm.mp3" type="audio/mpeg">
         </audio>
     """, unsafe_allow_html=True)
     
