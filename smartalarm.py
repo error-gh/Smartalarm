@@ -103,7 +103,7 @@ elif st.session_state.state == "ALARMING":
     
     st.markdown("""
         <audio autoplay loop>
-          <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_2d81d56e62.mp3?filename=emergency-alarm-101962.mp3" type="audio/mpeg">
+          <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
         </audio>
     """, unsafe_allow_html=True)
     
