@@ -5,7 +5,7 @@ import random
 
 st.set_page_config(page_title="BrainAwake Alarm", page_icon="🚨", layout="centered")
 
-st.title("BrainAwake Alarm")
+st.title("🚨 BrainAwake Alarm")
 st.write("Aplikasi alarm anti-tidur dengan tantangan interaktif!")
 
 # Inisialisasi Session State
@@ -56,7 +56,7 @@ sentences = [
     "Aplikasi hebat dibuat dari baris-baris kode yang ditulis dengan teliti"
 ]
 
-# Waktu server saat ini (WIB / UTC+7)
+# Waktu server saat ini untuk acuan logika di background (WIB / UTC+7)
 utc_now = datetime.datetime.now(datetime.timezone.utc)
 wib_now = utc_now + datetime.timedelta(hours=7)
 current_time_obj = wib_now.time()
@@ -65,7 +65,25 @@ current_seconds = current_time_obj.hour * 3600 + current_time_obj.minute * 60 + 
 # --- KONDISI 1: IDLE (PENGATURAN ALARM & TANTANGAN) ---
 if st.session_state.state == "IDLE":
     st.subheader("⏰ Pengaturan Alarm & Modus Tantangan")
-    st.write(f"Waktu server WIB saat ini: **{current_time_obj.strftime('%H:%M:%S')}**")
+    
+    # Komponen Jam Real-Time JavaScript agar tidak offside
+    st.markdown("""
+        <div style="padding: 10px; background-color: #f0f2f6; border-radius: 5px; text-align: center; margin-bottom: 15px;">
+            <p style="margin: 0; font-size: 14px; color: #555;">Waktu Perangkat Anda (Real-Time):</p>
+            <h2 id="realtime-clock" style="margin: 0; color: #ff4b4b;">--:--:--</h2>
+        </div>
+        <script>
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('realtime-clock').innerText = hours + ":" + minutes + ":" + seconds;
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+        </script>
+    """, unsafe_allow_html=True)
     
     with st.form("alarm_form"):
         alarm_time = st.time_input("Pilih Waktu Alarm Berbunyi", datetime.time(current_time_obj.hour, (current_time_obj.minute + 1) % 60))
@@ -102,7 +120,7 @@ elif st.session_state.state == "WAITING":
     target_min = (target_sec % 3600) // 60
     
     st.info(f"⏳ Alarm aktif disetel pada jam **{target_hr:02d}:{target_min:02d} WIB** (Target Streak: {st.session_state.target_stages}). Jangan tutup halaman ini!")
-    st.write(f"Jam WIB server saat ini: `{current_time_obj.strftime('%H:%M:%S')}`")
+    st.write(f"Jam server sinkronisasi: `{current_time_obj.strftime('%H:%M:%S')}`")
     
     if st.button("❌ Batalkan / Reset Alarm"):
         st.session_state.state = "IDLE"
@@ -112,7 +130,7 @@ elif st.session_state.state == "WAITING":
         st.session_state.state = "ALARMING"
         st.rerun()
     else:
-        time.sleep(5)
+        time.sleep(3)
         st.rerun()
 
 # --- KONDISI 3: ALARMING (ALARM BERBUNYI & TANTANGAN BERJALAN) ---
@@ -150,7 +168,6 @@ elif st.session_state.state == "ALARMING":
                     st.success("✅ Benar!")
                     st.session_state.stage += 1
                     st.session_state.current_challenge = None
-                    # Jika streak target tercapai, pindah ke layar SUCCESS
                     if st.session_state.stage >= st.session_state.target_stages:
                         st.session_state.state = "SUCCESS"
                     st.rerun()
@@ -173,7 +190,6 @@ elif st.session_state.state == "ALARMING":
                 st.success("✅ Sempurna!")
                 st.session_state.stage += 1
                 st.session_state.current_challenge = None
-                # Jika streak target tercapai, pindah ke layar SUCCESS
                 if st.session_state.stage >= st.session_state.target_stages:
                     st.session_state.state = "SUCCESS"
                     st.rerun()
