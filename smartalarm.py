@@ -121,7 +121,7 @@ elif st.session_state.state == "ALARMING":
     
     # Audio Alarm Sirine Nuklir / Evakuasi
     st.markdown("""
-        <audio autoplay loop controls>
+        <audio autoplay loop>
           <source src="https://assets.mixkit.co/active_storage/sfx/1005/1005-preview.mp3" type="audio/mpeg">
         </audio>
     """, unsafe_allow_html=True)
