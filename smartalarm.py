@@ -5,12 +5,12 @@ import random
 
 st.set_page_config(page_title="Smart Math & Task Alarm", page_icon="🚨", layout="centered")
 
-st.title("BrainAwake Alarm")
+st.title("🚨 Smart Math & Task Alarm")
 st.write("Aplikasi alarm anti-tidur dengan tantangan interaktif!")
 
 # Inisialisasi Session State
 if "state" not in st.session_state:
-    st.session_state.state = "IDLE"  # Status: IDLE, WAITING, ALARMING
+    st.session_state.state = "IDLE"  # Status: IDLE, WAITING, ALARMING, SUCCESS
 if "target_alarm_seconds" not in st.session_state:
     st.session_state.target_alarm_seconds = 0
 if "stage" not in st.session_state:
@@ -119,16 +119,15 @@ elif st.session_state.state == "WAITING":
 elif st.session_state.state == "ALARMING":
     st.error("🚨 WAKTU TIBA! ALARM SIRINE BERBUNYI! Selesaikan tantangan untuk mematikan alarm!")
     
-    # Audio Alarm Pilihan 3: Sirine Nuklir / Evakuasi
+    # Audio Alarm Sirine Nuklir / Evakuasi
     st.markdown("""
-        <audio autoplay loop>
+        <audio autoplay loop controls>
           <source src="https://assets.mixkit.co/active_storage/sfx/1005/1005-preview.mp3" type="audio/mpeg">
         </audio>
     """, unsafe_allow_html=True)
     
     st.write(f"### Progres Streak Berhasil: {st.session_state.stage} / {st.session_state.target_stages}")
     
-    # Pilih tantangan berdasarkan opsi centang pengguna di awal
     if st.session_state.current_challenge is None:
         st.session_state.current_challenge = random.choice(st.session_state.allowed_modes)
         if st.session_state.current_challenge == 'math':
@@ -151,10 +150,9 @@ elif st.session_state.state == "ALARMING":
                     st.success("✅ Benar!")
                     st.session_state.stage += 1
                     st.session_state.current_challenge = None
+                    # Jika streak target tercapai, pindah ke layar SUCCESS
                     if st.session_state.stage >= st.session_state.target_stages:
-                        st.session_state.state = "IDLE"
-                        st.session_state.stage = 0
-                        st.balloons()
+                        st.session_state.state = "SUCCESS"
                     st.rerun()
                 else:
                     st.error("❌ Salah! Progres streak direset ke 0.")
@@ -175,10 +173,9 @@ elif st.session_state.state == "ALARMING":
                 st.success("✅ Sempurna!")
                 st.session_state.stage += 1
                 st.session_state.current_challenge = None
+                # Jika streak target tercapai, pindah ke layar SUCCESS
                 if st.session_state.stage >= st.session_state.target_stages:
-                    st.session_state.state = "IDLE"
-                    st.session_state.stage = 0
-                    st.balloons()
+                    st.session_state.state = "SUCCESS"
                     st.rerun()
                 else:
                     st.rerun()
@@ -187,3 +184,15 @@ elif st.session_state.state == "ALARMING":
                 st.session_state.stage = 0
                 st.session_state.current_challenge = None
                 st.rerun()
+
+# --- KONDISI 4: SUCCESS (LAYAR KEBERHASILAN & KEMBALI KE BERANDA) ---
+elif st.session_state.state == "SUCCESS":
+    st.balloons()
+    st.success("🎉 SELAMAT! Kamu berhasil menyelesaikan semua tantangan dan terbangun sepenuhnya!")
+    st.write("Alarm telah dimatikan secara total. Silakan kembali ke beranda untuk menyetel alarm baru.")
+    
+    if st.button("🏠 Selesai / Kembali ke Beranda", type="primary"):
+        st.session_state.state = "IDLE"
+        st.session_state.stage = 0
+        st.session_state.current_challenge = None
+        st.rerun()
