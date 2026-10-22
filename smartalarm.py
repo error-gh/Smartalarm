@@ -66,22 +66,27 @@ current_seconds = current_time_obj.hour * 3600 + current_time_obj.minute * 60 + 
 if st.session_state.state == "IDLE":
     st.subheader("⏰ Pengaturan Alarm & Modus Tantangan")
     
-    # Komponen Jam Real-Time JavaScript agar tidak offside
+    # Perbaikan Jam Real-Time JavaScript yang aman dari nyangkut
     st.markdown("""
-        <div style="padding: 10px; background-color: #f0f2f6; border-radius: 5px; text-align: center; margin-bottom: 15px;">
-            <p style="margin: 0; font-size: 14px; color: #555;">Waktu Perangkat Anda (Real-Time):</p>
-            <h2 id="realtime-clock" style="margin: 0; color: #ff4b4b;">--:--:--</h2>
+        <div style="padding: 12px; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; text-align: center; margin-bottom: 15px;">
+            <p style="margin: 0; font-size: 14px; color: #aaa;">Waktu Perangkat Anda (Real-Time):</p>
+            <h2 id="realtime-clock" style="margin: 0; color: #ff4b4b; font-family: monospace;">Loading...</h2>
         </div>
         <script>
-            function updateClock() {
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                document.getElementById('realtime-clock').innerText = hours + ":" + minutes + ":" + seconds;
-            }
-            setInterval(updateClock, 1000);
-            updateClock();
+            (function() {
+                function updateClock() {
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const elem = document.getElementById('realtime-clock');
+                    if (elem) {
+                        elem.innerText = hours + ":" + minutes + ":" + seconds;
+                    }
+                }
+                updateClock();
+                setInterval(updateClock, 1000);
+            })();
         </script>
     """, unsafe_allow_html=True)
     
