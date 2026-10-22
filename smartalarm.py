@@ -3,9 +3,9 @@ import datetime
 import time
 import random
 
-st.set_page_config(page_title="Smart Math & Task Alarm", page_icon="🚨", layout="centered")
+st.set_page_config(page_title="BrainAwake Alarm", page_icon="🚨", layout="centered")
 
-st.title("🚨 Smart Math & Task Alarm")
+st.title("BrainAwake Alarm")
 st.write("Aplikasi alarm anti-tidur dengan tantangan interaktif!")
 
 # Inisialisasi Session State
